@@ -441,3 +441,136 @@ def generate_insights(request: InsightGenerateRequest):
             status_code=500,
             detail=f"Insight generation failed: {str(error)}",
         )
+@app.get("/businesses/{business_id}")
+def get_business(business_id: UUID):
+    try:
+        response = (
+            supabase.table("businesses")
+            .select("*")
+            .eq("id", str(business_id))
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Business not found.",
+            )
+
+        return {"business": response.data[0]}
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve business: {str(error)}",
+        )
+
+
+@app.get("/businesses/{business_id}/comments")
+def get_business_comments(business_id: UUID):
+    try:
+        response = (
+            supabase.table("comments")
+            .select("*")
+            .eq("business_id", str(business_id))
+            .order("created_at", desc=True)
+            .limit(100)
+            .execute()
+        )
+
+        comments = response.data or []
+
+        return {
+            "count": len(comments),
+            "comments": comments,
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve comments: {str(error)}",
+        )
+
+
+@app.get("/comments/{comment_id}")
+def get_comment(comment_id: UUID):
+    try:
+        response = (
+            supabase.table("comments")
+            .select("*")
+            .eq("id", str(comment_id))
+            .limit(1)
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Comment not found.",
+            )
+
+        return {"comment": response.data[0]}
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve comment: {str(error)}",
+        )
+
+
+@app.get("/businesses/{business_id}/documents")
+def get_business_documents(business_id: UUID):
+    try:
+        response = (
+            supabase.table("documents")
+            .select("id,business_id,title,content,created_at")
+            .eq("business_id", str(business_id))
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+        documents = response.data or []
+
+        return {
+            "count": len(documents),
+            "documents": documents,
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve documents: {str(error)}",
+        )
+
+
+@app.get("/businesses/{business_id}/insights")
+def get_business_insights(business_id: UUID):
+    try:
+        response = (
+            supabase.table("insights")
+            .select("*")
+            .eq("business_id", str(business_id))
+            .order("created_at", desc=True)
+            .limit(20)
+            .execute()
+        )
+
+        insights = response.data or []
+
+        return {
+            "count": len(insights),
+            "insights": insights,
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve insights: {str(error)}",
+        )
