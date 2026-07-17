@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from app.database import supabase
 from app.gemini_service import (
     analyze_comment_with_gemini,
+    generate_business_insight,
     generate_grounded_reply,
 )
 from app.embedding_service import (
@@ -35,6 +36,9 @@ class DocumentCreateRequest(BaseModel):
     business_id: UUID
     title: str = Field(min_length=2, max_length=150)
     content: str = Field(min_length=20, max_length=50000)
+
+class InsightGenerateRequest(BaseModel):
+    business_id: UUID
 
 @app.get("/")
 def root():
@@ -355,4 +359,85 @@ def create_grounded_comment_reply(comment_id: UUID):
         raise HTTPException(
             status_code=500,
             detail=f"Grounded reply generation failed: {str(error)}",
+        )
+@app.post(
+    "/insights/generate",
+    status_code=status.HTTP_201_CREATED,
+)
+def generate_insights(request: InsightGenerateRequest):
+    try:
+        business_id = str(request.business_id)
+
+        business_response = (
+            supabase.table("businesses")
+            .select("*")
+            .eq("id", business_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not business_response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Business not found.",
+            )
+
+        business = business_response.data[0]
+
+        comments_response = (
+            supabase.table("comments")
+            .select(
+                "text,sentiment,category,urgency,summary"
+            )
+            .eq("business_id", business_id)
+            .order("created_at", desc=True)
+            .limit(50)
+            .execute()
+        )
+
+        comments = comments_response.data or []
+
+        if not comments:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "No comments are available to generate insights."
+                ),
+            )
+
+        insight_summary = generate_business_insight(
+            business_name=business["name"],
+            comments=comments,
+        )
+
+        insight_response = (
+            supabase.table("insights")
+            .insert(
+                {
+                    "business_id": business_id,
+                    "summary": insight_summary,
+                }
+            )
+            .execute()
+        )
+
+        if not insight_response.data:
+            raise HTTPException(
+                status_code=500,
+                detail="The insight could not be saved.",
+            )
+
+        return {
+            "message": "Insight generated successfully",
+            "comments_analyzed": len(comments),
+            "insight": insight_response.data[0],
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Insight generation failed: {str(error)}",
         )

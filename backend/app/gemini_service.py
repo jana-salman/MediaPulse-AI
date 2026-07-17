@@ -154,3 +154,54 @@ Rules:
         )
 
     return response.text.strip()
+def generate_business_insight(
+    business_name: str,
+    comments: list[dict],
+) -> str:
+    comment_details = "\n".join(
+        [
+            (
+                f"- Comment: {comment.get('text', '')}\n"
+                f"  Sentiment: {comment.get('sentiment', 'unknown')}\n"
+                f"  Category: {comment.get('category', 'unknown')}\n"
+                f"  Urgency: {comment.get('urgency', 'unknown')}\n"
+                f"  Summary: {comment.get('summary', '')}"
+            )
+            for comment in comments
+        ]
+    )
+
+    prompt = f"""
+You are an AI business analyst for MediaPulse AI.
+
+Business name: {business_name}
+
+Recent customer comments:
+{comment_details}
+
+Create a concise dashboard insight summary.
+
+Include:
+- The overall customer mood.
+- The most common complaint or praise.
+- Any urgent issue requiring attention.
+- Three practical recommendations for the business.
+
+Rules:
+- Use only the provided comment information.
+- Do not invent statistics or facts.
+- Keep the summary under 180 words.
+- Make it easy for a small-business owner to understand.
+"""
+
+    response = client.models.generate_content(
+        model=gemini_model,
+        contents=prompt,
+    )
+
+    if not response.text:
+        raise RuntimeError(
+            "Gemini returned an empty insight summary."
+        )
+
+    return response.text.strip()
