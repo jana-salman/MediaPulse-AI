@@ -114,3 +114,43 @@ guarantees, or compensation.
     return CommentAIResult.model_validate_json(
         response.text
     )
+def generate_grounded_reply(
+    comment_text: str,
+    business_name: str,
+    brand_tone: str,
+    policy_context: str,
+) -> str:
+    prompt = f"""
+You are the customer-support assistant for MediaPulse AI.
+
+Business name: {business_name}
+Brand tone: {brand_tone}
+
+Customer comment:
+"{comment_text}"
+
+Relevant business policies:
+{policy_context}
+
+Write a helpful reply to the customer.
+
+Rules:
+- Use only the supplied business policies.
+- Match the business brand tone.
+- Keep the reply between one and three sentences.
+- Do not invent refunds, discounts, guarantees, or policies.
+- If the policy does not fully answer the issue, ask the customer
+  to contact the business for further assistance.
+"""
+
+    response = client.models.generate_content(
+        model=gemini_model,
+        contents=prompt,
+    )
+
+    if not response.text:
+        raise RuntimeError(
+            "Gemini returned an empty grounded reply."
+        )
+
+    return response.text.strip()

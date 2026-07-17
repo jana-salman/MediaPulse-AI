@@ -4,9 +4,15 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.database import supabase
-from app.gemini_service import analyze_comment_with_gemini
-
-
+from app.gemini_service import (
+    analyze_comment_with_gemini,
+    generate_grounded_reply,
+)
+from app.embedding_service import (
+    create_document_embedding,
+    create_query_embedding,
+    split_into_chunks,
+)
 app = FastAPI(
     title="MediaPulse AI API",
     description="AI-powered social media intelligence backend",
@@ -25,6 +31,10 @@ class CommentAnalyzeRequest(BaseModel):
     business_id: UUID
     text: str = Field(min_length=2, max_length=3000)
 
+class DocumentCreateRequest(BaseModel):
+    business_id: UUID
+    title: str = Field(min_length=2, max_length=150)
+    content: str = Field(min_length=20, max_length=50000)
 
 @app.get("/")
 def root():
@@ -154,4 +164,195 @@ def analyze_comment(request: CommentAnalyzeRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Comment analysis failed: {str(error)}",
+        )
+@app.post(
+    "/documents",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_document(request: DocumentCreateRequest):
+    try:
+        business_id = str(request.business_id)
+
+        business_response = (
+            supabase.table("businesses")
+            .select("id")
+            .eq("id", business_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not business_response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Business not found.",
+            )
+
+        chunks = split_into_chunks(request.content)
+
+        document_rows = []
+
+        for index, chunk in enumerate(chunks, start=1):
+            embedding = create_document_embedding(
+                text=chunk,
+                title=request.title,
+            )
+
+            document_rows.append(
+                {
+                    "business_id": business_id,
+                    "title": request.title,
+                    "content": chunk,
+                    "embedding": embedding,
+                }
+            )
+
+        response = (
+            supabase.table("documents")
+            .insert(document_rows)
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(
+                status_code=500,
+                detail="Document could not be saved.",
+            )
+
+        saved_chunks = [
+            {
+                "id": document["id"],
+                "title": document["title"],
+                "content": document["content"],
+            }
+            for document in response.data
+        ]
+
+        return {
+            "message": "Document processed successfully",
+            "chunks_created": len(saved_chunks),
+            "documents": saved_chunks,
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Document processing failed: {str(error)}",
+        )
+@app.post("/comments/{comment_id}/reply")
+def create_grounded_comment_reply(comment_id: UUID):
+    try:
+        comment_response = (
+            supabase.table("comments")
+            .select("*")
+            .eq("id", str(comment_id))
+            .limit(1)
+            .execute()
+        )
+
+        if not comment_response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Comment not found.",
+            )
+
+        comment = comment_response.data[0]
+
+        business_response = (
+            supabase.table("businesses")
+            .select("*")
+            .eq("id", comment["business_id"])
+            .limit(1)
+            .execute()
+        )
+
+        if not business_response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Business not found.",
+            )
+
+        business = business_response.data[0]
+
+        query_embedding = create_query_embedding(
+            comment["text"]
+        )
+
+        matches_response = supabase.rpc(
+            "match_documents",
+            {
+                "p_business_id": comment["business_id"],
+                "query_embedding": query_embedding,
+                "match_threshold": 0.30,
+                "match_count": 3,
+            },
+        ).execute()
+
+        matched_documents = matches_response.data or []
+
+        if not matched_documents:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "No relevant policy document was found "
+                    "for this comment."
+                ),
+            )
+
+        policy_context = "\n\n".join(
+            (
+                f"Policy title: {document['title']}\n"
+                f"Policy content: {document['content']}"
+            )
+            for document in matched_documents
+        )
+
+        grounded_reply = generate_grounded_reply(
+            comment_text=comment["text"],
+            business_name=business["name"],
+            brand_tone=business["brand_tone"],
+            policy_context=policy_context,
+        )
+
+        source_titles = list(
+            dict.fromkeys(
+                document["title"]
+                for document in matched_documents
+            )
+        )
+
+        update_response = (
+            supabase.table("comments")
+            .update(
+                {
+                    "suggested_reply": grounded_reply,
+                    "reply_source": ", ".join(source_titles),
+                }
+            )
+            .eq("id", str(comment_id))
+            .execute()
+        )
+
+        if not update_response.data:
+            raise HTTPException(
+                status_code=500,
+                detail="The grounded reply could not be saved.",
+            )
+
+        return {
+            "message": "Grounded reply generated successfully",
+            "reply": grounded_reply,
+            "sources": matched_documents,
+            "comment": update_response.data[0],
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Grounded reply generation failed: {str(error)}",
         )
