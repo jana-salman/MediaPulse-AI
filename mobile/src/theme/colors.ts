@@ -1,25 +1,38 @@
+// MediaPulse AI design tokens
+// Concept: "pulse" -- listening to the heartbeat of customer conversation.
+// Warm paper ground (legitimate for a Beirut bakery brand), electric indigo
+// as the tech/AI signal, coral as the one accent reserved for the pulse
+// motif and urgent moments.
+
 export const colors = {
-  background: "#F7F8FB",
+  background: "#FAF6F0", // warm paper
   surface: "#FFFFFF",
-  border: "#E4E7EC",
-  textPrimary: "#111827",
-  textSecondary: "#6B7280",
-  primary: "#4338CA",
-  primaryDark: "#312E81",
+  surfaceAlt: "#F3EEE6",
+  border: "#E9E1D6",
+  textPrimary: "#16121F", // ink
+  textSecondary: "#726B80",
 
-  positive: "#059669",
-  positiveBg: "#D1FAE5",
-  neutral: "#6B7280",
-  neutralBg: "#F3F4F6",
-  negative: "#DC2626",
-  negativeBg: "#FEE2E2",
+  primary: "#4B2FE0", // electric indigo
+  primaryDark: "#2E1B96",
+  primarySoft: "#EEE9FD",
 
-  urgencyLow: "#059669",
-  urgencyLowBg: "#D1FAE5",
-  urgencyMedium: "#D97706",
-  urgencyMediumBg: "#FEF3C7",
-  urgencyHigh: "#DC2626",
-  urgencyHighBg: "#FEE2E2",
+  pulse: "#FF4D6D", // signature accent -- waveform, energy, urgency glow
 
-  danger: "#DC2626",
+  positive: "#1FAE7A",
+  positiveBg: "#DFF5EA",
+  neutral: "#726B80",
+  neutralBg: "#EFECF5",
+  negative: "#E23F5C",
+  negativeBg: "#FCE4E9",
+
+  urgencyLow: "#1FAE7A",
+  urgencyLowBg: "#DFF5EA",
+  urgencyMedium: "#F5A524",
+  urgencyMediumBg: "#FDF0DA",
+  urgencyHigh: "#E23F5C",
+  urgencyHighBg: "#FCE4E9",
+
+  danger: "#E23F5C",
+
+  ink: "#16121F",
 };

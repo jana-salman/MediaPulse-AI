@@ -12,6 +12,7 @@ import { createBusiness, getBusiness } from "../config/api";
 import { useAuth } from "../context/AuthContext";
 import { useBusiness } from "../context/BusinessContext";
 import { colors } from "../theme/colors";
+import { fonts } from "../theme/fonts";
 
 export default function BusinessSetupScreen() {
   const { setBusiness } = useBusiness();
@@ -155,13 +156,14 @@ export default function BusinessSetupScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingTop: 60 },
-  title: { fontSize: 22, fontWeight: "700", color: colors.textPrimary },
+  title: { fontFamily: fonts.display, fontSize: 24, color: colors.textPrimary },
   subtitle: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: 6,
     marginBottom: 20,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   tabs: {
     flexDirection: "row",
@@ -174,27 +176,34 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 8 },
   tabActive: { backgroundColor: colors.primary },
-  tabText: { color: colors.textSecondary, fontWeight: "600", fontSize: 13 },
-  tabTextActive: { color: "#fff", fontWeight: "600", fontSize: 13 },
+  tabText: { fontFamily: fonts.bodySemiBold, color: colors.textSecondary, fontSize: 13 },
+  tabTextActive: { fontFamily: fonts.bodySemiBold, color: "#fff", fontSize: 13 },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: fonts.body,
     fontSize: 15,
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 15,
     alignItems: "center",
     marginTop: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  buttonText: { color: "#fff", fontWeight: "600", fontSize: 15 },
-  error: { color: colors.danger, fontSize: 13, marginBottom: 10 },
+  buttonText: { color: "#fff", fontFamily: fonts.bodySemiBold, fontSize: 15 },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, marginBottom: 10 },
   signOut: { marginTop: 28, alignItems: "center" },
-  signOutText: { color: colors.textSecondary, fontSize: 13 },
+  signOutText: { fontFamily: fonts.bodyMedium, color: colors.textSecondary, fontSize: 13 },
 });

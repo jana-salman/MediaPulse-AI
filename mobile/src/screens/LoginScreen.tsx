@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -9,8 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { PulseWaveform } from "../components/PulseWaveform";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme/colors";
+import { fonts } from "../theme/fonts";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -19,6 +22,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async () => {
     setError(null);
@@ -47,30 +51,53 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.title}>MediaPulse AI</Text>
-      <Text style={styles.subtitle}>
-        {mode === "signin" ? "Sign in to continue" : "Create an account"}
-      </Text>
+      <View style={styles.brandBlock}>
+        <View style={styles.logoMark}>
+          <Text style={styles.logoMarkText}>M</Text>
+        </View>
+        <Text style={styles.title}>MediaPulse AI</Text>
+        <PulseWaveform color={colors.pulse} width={140} height={24} />
+        <Text style={styles.subtitle}>
+          {mode === "signin" ? "Sign in to continue" : "Create an account"}
+        </Text>
+      </View>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.passwordWrapper}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          placeholderTextColor={colors.textSecondary}
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeButton}
+          onPress={() => setShowPassword((prev) => !prev)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
+      <TouchableOpacity style={styles.button} onPress={submit} disabled={loading} activeOpacity={0.85}>
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -100,53 +127,103 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     backgroundColor: colors.background,
   },
+  brandBlock: { alignItems: "center", marginBottom: 36 },
+  logoMark: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  logoMarkText: {
+    fontFamily: fonts.display,
+    fontSize: 26,
+    color: "#fff",
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontFamily: fonts.display,
+    fontSize: 26,
     color: colors.textPrimary,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 15,
+    fontFamily: fonts.body,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: "center",
-    marginTop: 6,
-    marginBottom: 28,
+    marginTop: 10,
   },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: fonts.body,
     fontSize: 15,
+    color: colors.textPrimary,
     marginBottom: 12,
+  },
+  passwordWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  eyeButton: {
+    paddingHorizontal: 14,
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 15,
     alignItems: "center",
     marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
   },
   switchText: {
+    fontFamily: fonts.bodyMedium,
     color: colors.primary,
     textAlign: "center",
-    marginTop: 18,
+    marginTop: 20,
     fontSize: 13,
   },
   error: {
+    fontFamily: fonts.body,
     color: colors.danger,
     fontSize: 13,
     marginBottom: 10,
+    textAlign: "center",
   },
 });

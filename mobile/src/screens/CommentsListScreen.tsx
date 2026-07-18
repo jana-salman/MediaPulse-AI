@@ -10,9 +10,11 @@ import {
   View,
 } from "react-native";
 import { CommentCard } from "../components/CommentCard";
+import { EmptyState } from "../components/EmptyState";
 import { getComments } from "../config/api";
 import { useBusiness } from "../context/BusinessContext";
 import { colors } from "../theme/colors";
+import { fonts } from "../theme/fonts";
 import { Comment } from "../types";
 import { MainStackParamList } from "../navigation/AppNavigator";
 
@@ -72,11 +74,11 @@ export default function CommentsListScreen({ navigation }: Props) {
             <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
           }
           ListEmptyComponent={
-            <View style={styles.centered}>
-              <Text style={styles.emptyText}>
-                No comments yet. Add some from the "Add" tab.
-              </Text>
-            </View>
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="No comments yet"
+              subtitle='Add some from the "Add" tab to see them here.'
+            />
           }
           renderItem={({ item }) => (
             <CommentCard
@@ -94,6 +96,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: 16, flexGrow: 1 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 30 },
-  error: { color: colors.danger, textAlign: "center" },
-  emptyText: { color: colors.textSecondary, textAlign: "center" },
+  error: { fontFamily: fonts.body, color: colors.danger, textAlign: "center" },
 });

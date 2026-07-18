@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { fonts } from "../theme/fonts";
 
 export function Badge({
   label,
@@ -12,6 +13,7 @@ export function Badge({
 }) {
   return (
     <View style={[styles.badge, { backgroundColor }]}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.text, { color }]}>{label}</Text>
     </View>
   );
@@ -19,14 +21,23 @@ export function Badge({
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
     marginRight: 6,
+    marginBottom: 6,
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginRight: 5,
   },
   text: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 11,
-    fontWeight: "600",
     textTransform: "capitalize",
   },
 });

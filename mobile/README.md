@@ -1,5 +1,29 @@
 # MediaPulse AI — Mobile App (Phase 2, Person B)
 
+## Design refresh (new)
+
+The UI now runs on a small design system instead of default styling:
+
+- **Palette**: electric indigo (`#4B2FE0`) primary, warm paper background,
+  coral (`#FF4D6D`) reserved as the one signature accent
+- **Type**: Space Grotesk for headlines, Inter for body text, Space Mono for
+  dashboard numbers — loaded via `@expo-google-fonts/*`
+- **Signature motif**: a pulse/waveform line (`src/components/PulseWaveform.tsx`)
+  used under headers and in empty states — a literal nod to "listening to the
+  pulse of your customers"
+- Comment cards now carry a colored left-edge strip keyed to urgency, so the
+  list is scannable by color before reading any text
+- Shared `EmptyState` component for consistent empty-list messaging
+
+**New dependencies needed** — run this once after pulling these changes:
+```powershell
+npx expo install react-native-svg @expo-google-fonts/inter @expo-google-fonts/space-grotesk @expo-google-fonts/space-mono expo-font
+```
+Using `npx expo install` (not manually editing `package.json`) ensures you get
+versions that actually match your installed SDK — see the note below on why
+that matters.
+
+
 React Native + Expo app that talks to Person A's FastAPI backend and to
 Supabase Auth directly.
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "../theme/colors";
+import { fonts } from "../theme/fonts";
 import { Comment } from "../types";
 import { Badge } from "./Badge";
 
@@ -27,48 +28,60 @@ export function CommentCard({
   const urgency = urgencyColors[comment.urgency] ?? urgencyColors.low;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.badgeRow}>
-        <Badge label={comment.sentiment} color={sentiment.color} backgroundColor={sentiment.bg} />
-        <Badge
-          label={comment.category.replace("_", " ")}
-          color={colors.primary}
-          backgroundColor="#EEF2FF"
-        />
-        <Badge label={`${comment.urgency} urgency`} color={urgency.color} backgroundColor={urgency.bg} />
+    <TouchableOpacity style={styles.wrapper} onPress={onPress} activeOpacity={0.7}>
+      {/* Urgency strip -- scan the list by color before reading a word */}
+      <View style={[styles.edgeStrip, { backgroundColor: urgency.color }]} />
+      <View style={styles.card}>
+        <View style={styles.badgeRow}>
+          <Badge label={comment.sentiment} color={sentiment.color} backgroundColor={sentiment.bg} />
+          <Badge
+            label={comment.category.replace("_", " ")}
+            color={colors.primary}
+            backgroundColor={colors.primarySoft}
+          />
+          <Badge label={`${comment.urgency} urgency`} color={urgency.color} backgroundColor={urgency.bg} />
+        </View>
+        <Text style={styles.commentText} numberOfLines={2}>
+          {comment.text}
+        </Text>
+        <Text style={styles.summary} numberOfLines={2}>
+          {comment.summary}
+        </Text>
       </View>
-      <Text style={styles.commentText} numberOfLines={2}>
-        {comment.text}
-      </Text>
-      <Text style={styles.summary} numberOfLines={2}>
-        {comment.summary}
-      </Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  wrapper: {
+    flexDirection: "row",
+    borderRadius: 14,
+    marginBottom: 12,
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: "hidden",
   },
+  edgeStrip: { width: 5 },
+  card: { flex: 1, padding: 14 },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   commentText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: 4,
   },
   summary: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textSecondary,
+    lineHeight: 18,
   },
 });
