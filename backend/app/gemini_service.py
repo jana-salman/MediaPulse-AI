@@ -1,3 +1,4 @@
+import re
 import os
 from typing import Literal
 
@@ -192,6 +193,10 @@ Rules:
 - Do not invent statistics or facts.
 - Keep the summary under 180 words.
 - Make it easy for a small-business owner to understand.
+- Return plain text only.
+- Do not use Markdown formatting.
+- Do not use #, *, **, bullet symbols, or Markdown-numbered lists.
+- Use simple section headings followed by normal sentences.
 """
 
     response = client.models.generate_content(
@@ -199,9 +204,32 @@ Rules:
         contents=prompt,
     )
 
+    
     if not response.text:
         raise RuntimeError(
             "Gemini returned an empty insight summary."
         )
 
-    return response.text.strip()
+    insight_text = response.text.strip()
+
+    # Remove Markdown headings such as ### Title
+    insight_text = re.sub(
+        r"^#{1,6}\s*",
+        "",
+        insight_text,
+        flags=re.MULTILINE,
+    )
+
+    # Remove bold and italic Markdown symbols
+    insight_text = insight_text.replace("**", "")
+    insight_text = insight_text.replace("__", "")
+
+    # Remove bullet symbols at the beginning of lines
+    insight_text = re.sub(
+        r"^\s*[-*•]\s+",
+        "",
+        insight_text,
+        flags=re.MULTILINE,
+    )
+
+    return insight_text
