@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import supabase
 from app.gemini_service import (
     analyze_comment_with_gemini,
@@ -19,7 +19,13 @@ app = FastAPI(
     description="AI-powered social media intelligence backend",
     version="1.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class BusinessCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)

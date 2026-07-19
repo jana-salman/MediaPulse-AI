@@ -1,19 +1,22 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { fonts } from "../theme/fonts";
+import { radii } from "../theme/tokens";
 
 export function Badge({
   label,
   color,
   backgroundColor,
+  dot = true,
 }: {
   label: string;
   color: string;
   backgroundColor: string;
+  dot?: boolean;
 }) {
   return (
-    <View style={[styles.badge, { backgroundColor }]}>
-      <View style={[styles.dot, { backgroundColor: color }]} />
+    <View style={[styles.badge, { backgroundColor }]}> 
+      {dot ? <View style={[styles.dot, { backgroundColor: color }]} /> : null}
       <Text style={[styles.text, { color }]}>{label}</Text>
     </View>
   );
@@ -23,21 +26,16 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "flex-start",
     paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
-    marginRight: 6,
-    marginBottom: 6,
+    paddingVertical: 5,
+    borderRadius: radii.pill,
   },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    marginRight: 5,
-  },
+  dot: { width: 5, height: 5, borderRadius: 3, marginRight: 5 },
   text: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 11,
+    fontSize: 10.5,
     textTransform: "capitalize",
+    letterSpacing: 0.1,
   },
 });
