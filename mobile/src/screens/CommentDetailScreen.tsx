@@ -193,7 +193,7 @@ export default function CommentDetailScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.topBar}>
         <Pressable onPress={navigation.goBack} style={styles.backButton} hitSlop={10}>
-          <Ionicons name="arrow-back" size={21} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={21} color={colors.textInverse} />
         </Pressable>
         <View style={styles.topBarCopy}>
           <Text style={styles.topBarTitle}>Comment analysis</Text>
@@ -442,52 +442,20 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: colors.background },
   loadingText: { fontFamily: fonts.bodyMedium, color: colors.textSecondary, fontSize: 12, marginTop: 10 },
-  topBar: {
-    width: "100%",
-    maxWidth: 780,
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 14,
-  },
-  backButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  topBar: { flexDirection: "row", alignItems: "center", gap: 11, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14, backgroundColor: colors.ink },
+  backButton: { width: 42, height: 42, borderRadius: 13, backgroundColor: colors.white10, borderWidth: 1, borderColor: colors.white16, alignItems: "center", justifyContent: "center" },
   topBarCopy: { flex: 1 },
-  topBarTitle: { fontFamily: fonts.displayMedium, fontSize: 16, color: colors.textPrimary },
-  topBarSubtitle: { fontFamily: fonts.body, fontSize: 9.5, color: colors.textTertiary, marginTop: 2 },
-  aiBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 7, borderRadius: radii.pill, backgroundColor: colors.primarySoft },
-  aiBadgeText: { fontFamily: fonts.mono, fontSize: 9, color: colors.primary },
-  content: {
-    width: "100%",
-    maxWidth: 780,
-    alignSelf: "center",
-    paddingHorizontal: 18,
-    paddingBottom: 24,
-  },
-  classificationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    padding: 18,
-    borderRadius: radii.xl,
-    backgroundColor: colors.ink,
-    overflow: "hidden",
-    ...shadows.card,
-  },
+  topBarTitle: { fontFamily: fonts.displayMedium, fontSize: 16, color: colors.textInverse },
+  topBarSubtitle: { fontFamily: fonts.body, fontSize: 9.5, color: colors.white72, marginTop: 2 },
+  aiBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 7, borderRadius: radii.pill, backgroundColor: colors.white10, borderWidth: 1, borderColor: colors.white16 },
+  aiBadgeText: { fontFamily: fonts.mono, fontSize: 9, color: colors.textInverse },
+  content: { paddingHorizontal: 16, paddingBottom: 20, width: "100%", maxWidth: 760, alignSelf: "center" },
+  classificationCard: { flexDirection: "row", alignItems: "center", gap: 13, padding: 18, borderRadius: radii.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, overflow: "hidden", ...shadows.soft },
   sentimentHeroIcon: { width: 54, height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  classificationEyebrow: { fontFamily: fonts.bodySemiBold, fontSize: 9.5, letterSpacing: 1.1, color: colors.cyan },
-  classificationTitle: { fontFamily: fonts.displayMedium, fontSize: 16, color: colors.textInverse, textTransform: "capitalize", marginTop: 4 },
+  classificationEyebrow: { fontFamily: fonts.bodySemiBold, fontSize: 9.5, letterSpacing: 1.1, color: colors.primary },
+  classificationTitle: { fontFamily: fonts.displayMedium, fontSize: 16, color: colors.textPrimary, textTransform: "capitalize", marginTop: 4 },
   badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 9 },
-  sectionLabel: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 10.25,
-    letterSpacing: 1.15,
-    color: colors.textSecondary,
-    marginTop: 24,
-    marginBottom: 9,
-  },
+  sectionLabel: { fontFamily: fonts.bodySemiBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textSecondary, marginTop: 22, marginBottom: 8 },
   quoteCard: { padding: 16, flexDirection: "row", gap: 12 },
   quoteMark: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   commentText: { flex: 1, fontFamily: fonts.bodySemiBold, fontSize: 14.5, lineHeight: 21, color: colors.textPrimary },
@@ -564,7 +532,7 @@ const styles = StyleSheet.create({
   },
 
   workflowStep: {
-    width: 52,
+    width: 54,
     alignItems: "center",
   },
 

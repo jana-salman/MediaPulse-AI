@@ -13,19 +13,15 @@ export const spacing = {
 };
 
 export const radii = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 22,
-  xxl: 28,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
   pill: 999,
 };
 
-const iosShadow = (
-  opacity: number,
-  radius: number,
-  y: number
-): ViewStyle => ({
+const iosShadow = (opacity: number, radius: number, y: number): ViewStyle => ({
   shadowColor: colors.ink,
   shadowOffset: { width: 0, height: y },
   shadowOpacity: opacity,
@@ -34,33 +30,18 @@ const iosShadow = (
 
 export const shadows: Record<"soft" | "card" | "floating", ViewStyle> = {
   soft: Platform.select({
-    ios: iosShadow(0.045, 12, 5),
+    ios: iosShadow(0.05, 12, 5),
     android: { elevation: 2 },
-    default: {
-      shadowColor: "rgba(16, 20, 38, 0.08)",
-      shadowOffset: { width: 0, height: 5 },
-      shadowOpacity: 1,
-      shadowRadius: 14,
-    },
+    default: {},
   }) as ViewStyle,
   card: Platform.select({
-    ios: iosShadow(0.07, 20, 9),
+    ios: iosShadow(0.08, 20, 9),
     android: { elevation: 4 },
-    default: {
-      shadowColor: "rgba(16, 20, 38, 0.10)",
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 1,
-      shadowRadius: 22,
-    },
+    default: {},
   }) as ViewStyle,
   floating: Platform.select({
-    ios: iosShadow(0.13, 28, 14),
-    android: { elevation: 10 },
-    default: {
-      shadowColor: "rgba(16, 20, 38, 0.16)",
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 1,
-      shadowRadius: 30,
-    },
+    ios: iosShadow(0.14, 26, 12),
+    android: { elevation: 9 },
+    default: {},
   }) as ViewStyle,
 };
