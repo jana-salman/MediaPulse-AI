@@ -47,6 +47,45 @@ function MetricCard({
   );
 }
 
+function formatCategoryLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function BreakdownRow({
+  label,
+  value,
+  percentage,
+  color,
+}: {
+  label: string;
+  value: number;
+  percentage: number;
+  color: string;
+}) {
+  const visualPercentage = value > 0 ? Math.max(percentage, 4) : 0;
+
+  return (
+    <View style={styles.breakdownRow}>
+      <View style={styles.breakdownTopRow}>
+        <Text style={styles.breakdownLabel}>{label}</Text>
+        <Text style={styles.breakdownValue}>
+          {value} · {percentage}%
+        </Text>
+      </View>
+      <View style={styles.breakdownTrack}>
+        <View
+          style={[
+            styles.breakdownFill,
+            { width: `${visualPercentage}%`, backgroundColor: color },
+          ]}
+        />
+      </View>
+    </View>
+  );
+}
+
 function InsightCard({ insight, index }: { insight: Insight; index: number }) {
   return (
     <SectionCard style={styles.insightCard}>
@@ -128,22 +167,57 @@ export default function DashboardScreen() {
     const neutral = comments.filter((comment) => comment.sentiment === "neutral").length;
     const negative = comments.filter((comment) => comment.sentiment === "negative").length;
     const highUrgency = comments.filter((comment) => comment.urgency === "high").length;
+    const mediumUrgency = comments.filter((comment) => comment.urgency === "medium").length;
+    const lowUrgency = comments.filter((comment) => comment.urgency === "low").length;
     const needsResponse = comments.filter(
       (comment) =>
         comment.status === "unanswered" ||
         comment.status === "reply_ready"
     ).length;
     const total = comments.length;
+
+    const categoryCounts = comments.reduce<Record<string, number>>(
+      (counts, comment) => {
+        const category = String(comment.category ?? "other");
+        counts[category] = (counts[category] ?? 0) + 1;
+        return counts;
+      },
+      {}
+    );
+
+    const topCategories = Object.entries(categoryCounts)
+      .sort(([, firstCount], [, secondCount]) => secondCount - firstCount)
+      .slice(0, 5)
+      .map(([category, count]) => ({
+        category,
+        label: formatCategoryLabel(category),
+        count,
+        percentage: total ? Math.round((count / total) * 100) : 0,
+      }));
+
     return {
       positive,
       neutral,
       negative,
       highUrgency,
+      mediumUrgency,
+      lowUrgency,
       needsResponse,
       total,
+      topCategories,
       positiveRate: total ? Math.round((positive / total) * 100) : 0,
       negativeRate: total ? Math.round((negative / total) * 100) : 0,
-      neutralRate: total ? Math.max(0, 100 - Math.round((positive / total) * 100) - Math.round((negative / total) * 100)) : 0,
+      neutralRate: total
+        ? Math.max(
+            0,
+            100 -
+              Math.round((positive / total) * 100) -
+              Math.round((negative / total) * 100)
+          )
+        : 0,
+      highUrgencyRate: total ? Math.round((highUrgency / total) * 100) : 0,
+      mediumUrgencyRate: total ? Math.round((mediumUrgency / total) * 100) : 0,
+      lowUrgencyRate: total ? Math.round((lowUrgency / total) * 100) : 0,
     };
   }, [comments]);
 
@@ -228,6 +302,80 @@ export default function DashboardScreen() {
             <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: colors.negative }]} /><Text style={styles.legendText}>Negative {metrics.negativeRate}%</Text></View>
           </View>
         </SectionCard>
+
+        <View style={styles.analyticsSection}>
+          <SectionCard style={styles.breakdownCard}>
+            <View style={styles.analyticsHeader}>
+              <View style={styles.analyticsIcon}>
+                <Ionicons name="layers-outline" size={18} color={colors.primary} />
+              </View>
+              <View style={styles.analyticsHeaderCopy}>
+                <Text style={styles.cardTitle}>Top customer concerns</Text>
+                <Text style={styles.cardSubtitle}>Comments grouped by category</Text>
+              </View>
+            </View>
+
+            {metrics.topCategories.length === 0 ? (
+              <Text style={styles.analyticsEmpty}>
+                Add customer comments to reveal the most common concerns.
+              </Text>
+            ) : (
+              <View style={styles.breakdownList}>
+                {metrics.topCategories.map((item) => (
+                  <BreakdownRow
+                    key={item.category}
+                    label={item.label}
+                    value={item.count}
+                    percentage={item.percentage}
+                    color={colors.primary}
+                  />
+                ))}
+              </View>
+            )}
+          </SectionCard>
+
+          <SectionCard style={styles.breakdownCard}>
+            <View style={styles.analyticsHeader}>
+              <View
+                style={[
+                  styles.analyticsIcon,
+                  { backgroundColor: colors.urgencyHighBg },
+                ]}
+              >
+                <Ionicons
+                  name="speedometer-outline"
+                  size={18}
+                  color={colors.urgencyHigh}
+                />
+              </View>
+              <View style={styles.analyticsHeaderCopy}>
+                <Text style={styles.cardTitle}>Urgency distribution</Text>
+                <Text style={styles.cardSubtitle}>How quickly feedback needs attention</Text>
+              </View>
+            </View>
+
+            <View style={styles.breakdownList}>
+              <BreakdownRow
+                label="High urgency"
+                value={metrics.highUrgency}
+                percentage={metrics.highUrgencyRate}
+                color={colors.urgencyHigh}
+              />
+              <BreakdownRow
+                label="Medium urgency"
+                value={metrics.mediumUrgency}
+                percentage={metrics.mediumUrgencyRate}
+                color={colors.urgencyMedium}
+              />
+              <BreakdownRow
+                label="Low urgency"
+                value={metrics.lowUrgency}
+                percentage={metrics.lowUrgencyRate}
+                color={colors.urgencyLow}
+              />
+            </View>
+          </SectionCard>
+        </View>
 
         {error ? <Notice message={error} /> : null}
 
@@ -320,6 +468,19 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendDot: { width: 7, height: 7, borderRadius: 4 },
   legendText: { fontFamily: fonts.bodyMedium, fontSize: 9.5, color: colors.textSecondary },
+  analyticsSection: { marginTop: 12, gap: 10 },
+  breakdownCard: { padding: 16 },
+  analyticsHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  analyticsIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
+  analyticsHeaderCopy: { flex: 1 },
+  breakdownList: { marginTop: 16, gap: 14 },
+  breakdownRow: { gap: 7 },
+  breakdownTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  breakdownLabel: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 11.5, color: colors.textPrimary },
+  breakdownValue: { fontFamily: fonts.mono, fontSize: 10, color: colors.textTertiary },
+  breakdownTrack: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceMuted, overflow: "hidden" },
+  breakdownFill: { height: "100%", borderRadius: 4 },
+  analyticsEmpty: { fontFamily: fonts.body, fontSize: 11, lineHeight: 17, color: colors.textTertiary, marginTop: 15 },
   aiSection: { marginTop: 24, marginBottom: 12 },
   sectionLabel: { fontFamily: fonts.bodySemiBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textSecondary },
   librarySubtitle: { fontFamily: fonts.body, fontSize: 10.5, color: colors.textTertiary, marginTop: 3 },
