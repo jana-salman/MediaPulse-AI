@@ -40,56 +40,46 @@ export function CommentCard({ comment, onPress }: { comment: Comment; onPress: (
   const sentiment = sentimentColors[comment.sentiment] ?? sentimentColors.neutral;
   const urgency = urgencyColors[comment.urgency] ?? urgencyColors.low;
   const status = statusColors[comment.status] ?? statusColors.unanswered;
-  const isHighPriority = comment.urgency === "high";
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${comment.sentiment} ${comment.category} comment`}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        shadows.soft,
-        isHighPriority && styles.highPriorityCard,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.card, shadows.soft, pressed && styles.pressed]}
     >
-      {isHighPriority ? (
-        <View style={[styles.priorityRail, { backgroundColor: urgency.color }]} />
-      ) : null}
+      <View style={[styles.priorityRail, { backgroundColor: urgency.color }]} />
 
       <View style={styles.headerRow}>
-        <View style={styles.categoryRow}>
-          <View style={[styles.sentimentIcon, { backgroundColor: sentiment.bg }]}>
-            <Ionicons name={sentiment.icon} size={18} color={sentiment.color} />
-          </View>
-          <View style={styles.categoryCopy}>
-            <Text style={styles.categoryLabel} numberOfLines={1}>
-              {comment.category.replace(/_/g, " ")}
-            </Text>
-            <Text style={styles.sentimentLabel}>{comment.sentiment} sentiment</Text>
-          </View>
+        <View style={[styles.sentimentIcon, { backgroundColor: sentiment.bg }]}> 
+          <Ionicons name={sentiment.icon} size={19} color={sentiment.color} />
         </View>
-        <Text style={styles.date}>{formatDate(comment.created_at)}</Text>
+
+        <View style={styles.headerCopy}>
+          <Text style={styles.category}>{comment.category.replace(/_/g, " ")}</Text>
+          <Text style={styles.date}>{formatDate(comment.created_at)}</Text>
+        </View>
+
+        <Badge label={status.label} color={status.color} backgroundColor={status.background} />
       </View>
 
-      <Text style={styles.commentText} numberOfLines={2}>{comment.text}</Text>
-      <Text style={styles.summary} numberOfLines={1}>{comment.summary}</Text>
+      <Text style={styles.commentText} numberOfLines={3}>{comment.text}</Text>
+      <Text style={styles.summary} numberOfLines={2}>{comment.summary}</Text>
 
       <View style={styles.footer}>
-        <View style={styles.footerMeta}>
-          <View style={[styles.priorityPill, { backgroundColor: urgency.bg }]}>
-            <View style={[styles.urgencyDot, { backgroundColor: urgency.color }]} />
-            <Text style={[styles.urgencyText, { color: urgency.color }]}>
-              {comment.urgency} priority
-            </Text>
+        <View style={styles.metaPills}>
+          <View style={[styles.metaPill, { backgroundColor: sentiment.bg }]}>
+            <View style={[styles.metaDot, { backgroundColor: sentiment.color }]} />
+            <Text style={[styles.metaText, { color: sentiment.color }]}>{comment.sentiment}</Text>
+          </View>
+          <View style={[styles.metaPill, { backgroundColor: urgency.bg }]}>
+            <Ionicons name="flash-outline" size={12} color={urgency.color} />
+            <Text style={[styles.metaText, { color: urgency.color }]}>{comment.urgency} priority</Text>
           </View>
         </View>
 
         <View style={styles.openAction}>
-          <Badge label={status.label} color={status.color} backgroundColor={status.background} dot={false} />
-          <View style={styles.chevronButton}>
-            <Ionicons name="chevron-forward" size={15} color={colors.textSecondary} />
+          <Text style={styles.openText}>Review</Text>
+          <View style={styles.chevronShell}>
+            <Ionicons name="arrow-forward" size={14} color={colors.textInverse} />
           </View>
         </View>
       </View>
@@ -101,91 +91,80 @@ const styles = StyleSheet.create({
   card: {
     position: "relative",
     backgroundColor: colors.surface,
-    borderRadius: radii.xl,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
+    paddingLeft: 19,
     marginBottom: 12,
     overflow: "hidden",
   },
-  highPriorityCard: { borderColor: "rgba(207,73,96,0.20)" },
-  priorityRail: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  pressed: { transform: [{ scale: 0.992 }], opacity: 0.94 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+  priorityRail: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 4,
   },
-  categoryRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
+  pressed: { transform: [{ scale: 0.992 }], opacity: 0.93 },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   sentimentIcon: {
     width: 38,
     height: 38,
-    borderRadius: 13,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  categoryCopy: { flex: 1 },
-  categoryLabel: {
+  headerCopy: { flex: 1 },
+  category: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 12,
+    fontSize: 11.5,
     color: colors.textPrimary,
     textTransform: "capitalize",
   },
-  sentimentLabel: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: colors.textTertiary,
-    textTransform: "capitalize",
-    marginTop: 2,
-  },
-  date: { fontFamily: fonts.bodyMedium, fontSize: 10.5, color: colors.textTertiary },
+  date: { fontFamily: fonts.body, fontSize: 10, color: colors.textTertiary, marginTop: 2 },
   commentText: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 14.5,
-    lineHeight: 21,
+    fontFamily: fonts.displayMedium,
+    fontSize: 15.5,
+    lineHeight: 22,
     color: colors.textPrimary,
-    marginTop: 14,
+    marginTop: 15,
   },
   summary: {
     fontFamily: fonts.body,
-    fontSize: 12,
+    fontSize: 12.2,
     color: colors.textSecondary,
     lineHeight: 18,
-    marginTop: 5,
+    marginTop: 6,
   },
   footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     marginTop: 14,
     paddingTop: 12,
-    gap: 10,
   },
-  footerMeta: { flex: 1 },
-  priorityPill: {
-    alignSelf: "flex-start",
+  metaPills: { flexDirection: "row", flexWrap: "wrap", gap: 6, flex: 1 },
+  metaPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 9,
+    gap: 5,
+    paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: radii.pill,
   },
-  urgencyDot: { width: 6, height: 6, borderRadius: 3 },
-  urgencyText: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 10.25,
-    textTransform: "capitalize",
-  },
+  metaDot: { width: 5, height: 5, borderRadius: 3 },
+  metaText: { fontFamily: fonts.bodySemiBold, fontSize: 9.5, textTransform: "capitalize" },
   openAction: { flexDirection: "row", alignItems: "center", gap: 7 },
-  chevronButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceMuted,
+  openText: { fontFamily: fonts.bodySemiBold, fontSize: 10.5, color: colors.textPrimary },
+  chevronShell: {
+    width: 26,
+    height: 26,
+    borderRadius: 9,
+    backgroundColor: colors.ink,
     alignItems: "center",
     justifyContent: "center",
   },
