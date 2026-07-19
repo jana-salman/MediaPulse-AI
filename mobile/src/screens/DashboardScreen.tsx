@@ -1,8 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -22,6 +24,117 @@ import { colors } from "../theme/colors";
 import { fonts } from "../theme/fonts";
 import { radii, shadows } from "../theme/tokens";
 import { Comment, Insight } from "../types";
+
+
+type ActionPlanTask = {
+  id: string;
+  text: string;
+  completed: boolean;
+};
+
+function cleanActionText(value: string) {
+  return value
+    .replace(/^\s*(?:\d+[.)]|[-*•])\s*/g, "")
+    .replace(
+      /^(?:recommend(?:ed)? actions?|recommendations?|action plan|next steps?)\s*:?\s*/i,
+      ""
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractTasksFromInsight(summary: string) {
+  const sections = summary
+    .replace(/\r/g, "")
+    .split(/\n+/)
+    .flatMap((line) =>
+      line.split(/(?<=[.!?])\s+(?=[A-Z])/)
+    )
+    .map(cleanActionText)
+    .filter(Boolean);
+
+  const excludedHeadings = [
+    /^overall customer mood\b/i,
+    /^customer mood\b/i,
+    /^most common (complaint|praise)\b/i,
+    /^urgent issues?\b/i,
+    /^main issues?\b/i,
+  ];
+
+  const unique: string[] = [];
+
+  for (const item of sections) {
+    if (
+      item.length < 12 ||
+      item.length > 180 ||
+      excludedHeadings.some((pattern) => pattern.test(item))
+    ) {
+      continue;
+    }
+
+    const normalized = item.toLowerCase();
+    if (!unique.some((existing) => existing.toLowerCase() === normalized)) {
+      unique.push(item.replace(/[.;:]+$/, ""));
+    }
+  }
+
+  return unique.slice(-4);
+}
+
+function createFallbackTasks(
+  comments: Comment[],
+  topCategories: { label: string; count: number }[]
+) {
+  const tasks: string[] = [];
+  const needsResponse = comments.filter(
+    (comment) =>
+      comment.status === "unanswered" ||
+      comment.status === "reply_ready"
+  ).length;
+  const highUrgency = comments.filter(
+    (comment) => comment.urgency === "high"
+  ).length;
+  const negative = comments.filter(
+    (comment) => comment.sentiment === "negative"
+  ).length;
+
+  if (needsResponse > 0) {
+    tasks.push(
+      `Respond to ${needsResponse} customer comment${
+        needsResponse === 1 ? "" : "s"
+      } that still need a response`
+    );
+  }
+
+  if (highUrgency > 0) {
+    tasks.push(
+      `Review and resolve ${highUrgency} high-urgency issue${
+        highUrgency === 1 ? "" : "s"
+      }`
+    );
+  }
+
+  if (topCategories[0]) {
+    tasks.push(
+      `Investigate recurring ${topCategories[0].label.toLowerCase()} feedback and define one corrective action`
+    );
+  }
+
+  if (negative > 0) {
+    tasks.push(
+      `Follow up on ${negative} negative customer experience${
+        negative === 1 ? "" : "s"
+      } and document the outcome`
+    );
+  }
+
+  tasks.push(
+    "Assign an owner and deadline to every open customer issue",
+    "Review the latest customer feedback with the team"
+  );
+
+  return tasks;
+}
 
 function MetricCard({
   label,
@@ -117,6 +230,8 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [creatingPlan, setCreatingPlan] = useState(false);
+  const [actionPlan, setActionPlan] = useState<ActionPlanTask[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(
@@ -147,6 +262,21 @@ export default function DashboardScreen() {
     }, [load])
   );
 
+  useEffect(() => {
+    if (!business) {
+      setActionPlan([]);
+      return;
+    }
+
+    AsyncStorage.getItem(`mediapulse-action-plan:${business.id}`)
+      .then((saved) => {
+        setActionPlan(saved ? JSON.parse(saved) : []);
+      })
+      .catch(() => {
+        setActionPlan([]);
+      });
+  }, [business]);
+
   const handleGenerateInsight = async () => {
     if (!business) return;
     setGenerating(true);
@@ -159,6 +289,79 @@ export default function DashboardScreen() {
       setError(err.message ?? "Could not generate a new insight.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const saveActionPlan = async (tasks: ActionPlanTask[]) => {
+    if (!business) return;
+    setActionPlan(tasks);
+    await AsyncStorage.setItem(
+      `mediapulse-action-plan:${business.id}`,
+      JSON.stringify(tasks)
+    );
+  };
+
+  const handleCreateActionPlan = async () => {
+    if (!business || comments.length === 0) return;
+
+    setCreatingPlan(true);
+    setError(null);
+
+    try {
+      let sourceInsight = insights[0];
+
+      if (!sourceInsight) {
+        const response = await generateInsight(business.id);
+        sourceInsight = response.insight;
+        setInsights((previous) => [
+          response.insight,
+          ...previous.filter((item) => item.id !== response.insight.id),
+        ]);
+      }
+
+      const insightTasks = extractTasksFromInsight(sourceInsight.summary);
+      const fallbackTasks = createFallbackTasks(
+        comments,
+        metrics.topCategories
+      );
+
+      const taskTexts = [...insightTasks, ...fallbackTasks]
+        .map(cleanActionText)
+        .filter(
+          (text, index, all) =>
+            text.length > 0 &&
+            all.findIndex(
+              (candidate) =>
+                candidate.toLowerCase() === text.toLowerCase()
+            ) === index
+        )
+        .slice(0, 4);
+
+      const tasks = taskTexts.map((text, index) => ({
+        id: `${Date.now()}-${index}`,
+        text,
+        completed: false,
+      }));
+
+      await saveActionPlan(tasks);
+    } catch (err: any) {
+      setError(err.message ?? "Could not create the action plan.");
+    } finally {
+      setCreatingPlan(false);
+    }
+  };
+
+  const toggleActionTask = async (taskId: string) => {
+    const updated = actionPlan.map((task) =>
+      task.id === taskId
+        ? { ...task, completed: !task.completed }
+        : task
+    );
+
+    try {
+      await saveActionPlan(updated);
+    } catch {
+      setError("Could not save the action-plan progress.");
     }
   };
 
@@ -220,6 +423,10 @@ export default function DashboardScreen() {
       lowUrgencyRate: total ? Math.round((lowUrgency / total) * 100) : 0,
     };
   }, [comments]);
+
+  const completedActions = actionPlan.filter(
+    (task) => task.completed
+  ).length;
 
   if (loading) {
     return (
@@ -377,6 +584,102 @@ export default function DashboardScreen() {
           </SectionCard>
         </View>
 
+        <SectionCard style={styles.actionPlanCard}>
+          <View style={styles.actionPlanHeader}>
+            <View style={styles.actionPlanIcon}>
+              <Ionicons
+                name="rocket-outline"
+                size={19}
+                color={colors.primary}
+              />
+            </View>
+
+            <View style={styles.actionPlanHeaderCopy}>
+              <Text style={styles.cardTitle}>AI action plan</Text>
+              <Text style={styles.cardSubtitle}>
+                Practical next steps based on the latest Gemini report
+              </Text>
+            </View>
+
+            {actionPlan.length > 0 ? (
+              <View style={styles.actionProgressPill}>
+                <Text style={styles.actionProgressText}>
+                  {completedActions}/{actionPlan.length}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          {actionPlan.length === 0 ? (
+            <View style={styles.actionPlanEmpty}>
+              <Text style={styles.actionPlanEmptyText}>
+                Turn customer feedback into four clear tasks your team can
+                complete.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.actionTaskList}>
+              {actionPlan.map((task) => (
+                <Pressable
+                  key={task.id}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: task.completed }}
+                  onPress={() => toggleActionTask(task.id)}
+                  style={({ pressed }) => [
+                    styles.actionTask,
+                    task.completed && styles.actionTaskCompleted,
+                    pressed && styles.actionTaskPressed,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.actionCheckbox,
+                      task.completed && styles.actionCheckboxCompleted,
+                    ]}
+                  >
+                    {task.completed ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={15}
+                        color={colors.textInverse}
+                      />
+                    ) : null}
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.actionTaskText,
+                      task.completed && styles.actionTaskTextCompleted,
+                    ]}
+                  >
+                    {task.text}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          <AppButton
+            label={
+              actionPlan.length > 0
+                ? "Regenerate action plan"
+                : "Create action plan"
+            }
+            icon="sparkles"
+            onPress={handleCreateActionPlan}
+            loading={creatingPlan}
+            disabled={comments.length === 0}
+            variant={actionPlan.length > 0 ? "soft" : "primary"}
+            style={styles.actionPlanButton}
+          />
+
+          {comments.length === 0 ? (
+            <Text style={styles.emptyHint}>
+              Add customer comments before creating an action plan.
+            </Text>
+          ) : null}
+        </SectionCard>
+
         {error ? <Notice message={error} /> : null}
 
         <View style={styles.aiSection}>
@@ -481,6 +784,92 @@ const styles = StyleSheet.create({
   breakdownTrack: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceMuted, overflow: "hidden" },
   breakdownFill: { height: "100%", borderRadius: 4 },
   analyticsEmpty: { fontFamily: fonts.body, fontSize: 11, lineHeight: 17, color: colors.textTertiary, marginTop: 15 },
+  actionPlanCard: { padding: 16, marginTop: 12 },
+  actionPlanHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  actionPlanIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionPlanHeaderCopy: { flex: 1 },
+  actionProgressPill: {
+    minWidth: 44,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.cyanSoft,
+    alignItems: "center",
+  },
+  actionProgressText: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.success,
+  },
+  actionPlanEmpty: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionPlanEmptyText: {
+    fontFamily: fonts.body,
+    fontSize: 11.5,
+    lineHeight: 18,
+    color: colors.textSecondary,
+  },
+  actionTaskList: { marginTop: 16, gap: 9 },
+  actionTask: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionTaskCompleted: {
+    backgroundColor: colors.successSoft,
+    borderColor: colors.successSoft,
+  },
+  actionTaskPressed: { opacity: 0.78 },
+  actionCheckbox: {
+    width: 23,
+    height: 23,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionCheckboxCompleted: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  actionTaskText: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: colors.textPrimary,
+  },
+  actionTaskTextCompleted: {
+    color: colors.textSecondary,
+    textDecorationLine: "line-through",
+  },
+  actionPlanButton: { marginTop: 15 },
   aiSection: { marginTop: 24, marginBottom: 12 },
   sectionLabel: { fontFamily: fonts.bodySemiBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textSecondary },
   librarySubtitle: { fontFamily: fonts.body, fontSize: 10.5, color: colors.textTertiary, marginTop: 3 },
