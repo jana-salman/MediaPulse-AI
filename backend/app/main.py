@@ -1,8 +1,9 @@
+from typing import Literal
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import supabase
 from app.gemini_service import (
     analyze_comment_with_gemini,
@@ -19,7 +20,13 @@ app = FastAPI(
     description="AI-powered social media intelligence backend",
     version="1.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class BusinessCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
@@ -39,6 +46,14 @@ class DocumentCreateRequest(BaseModel):
 
 class InsightGenerateRequest(BaseModel):
     business_id: UUID
+
+class CommentStatusUpdateRequest(BaseModel):
+    status: Literal[
+        "unanswered",
+        "reply_ready",
+        "sent",
+        "resolved",
+    ]
 
 @app.get("/")
 def root():
@@ -333,6 +348,7 @@ def create_grounded_comment_reply(comment_id: UUID):
                 {
                     "suggested_reply": grounded_reply,
                     "reply_source": ", ".join(source_titles),
+                     "status": "reply_ready",
                 }
             )
             .eq("id", str(comment_id))
@@ -360,10 +376,70 @@ def create_grounded_comment_reply(comment_id: UUID):
             status_code=500,
             detail=f"Grounded reply generation failed: {str(error)}",
         )
+    
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Grounded reply generation failed: {str(error)}",
+        )
+
+
+@app.patch("/comments/{comment_id}/status")
+def update_comment_status(
+    comment_id: UUID,
+    request: CommentStatusUpdateRequest,
+):
+    try:
+        comment_response = (
+            supabase.table("comments")
+            .select("id")
+            .eq("id", str(comment_id))
+            .limit(1)
+            .execute()
+        )
+
+        if not comment_response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Comment not found.",
+            )
+
+        update_response = (
+            supabase.table("comments")
+            .update({"status": request.status})
+            .eq("id", str(comment_id))
+            .execute()
+        )
+
+        if not update_response.data:
+            raise HTTPException(
+                status_code=500,
+                detail="The comment status could not be updated.",
+            )
+
+        return {
+            "message": "Comment status updated successfully",
+            "comment": update_response.data[0],
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update comment status: {str(error)}",
+        )
+
+
+
 @app.post(
     "/insights/generate",
     status_code=status.HTTP_201_CREATED,
 )
+
+
+
 def generate_insights(request: InsightGenerateRequest):
     try:
         business_id = str(request.business_id)

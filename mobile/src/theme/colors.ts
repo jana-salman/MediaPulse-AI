@@ -1,38 +1,60 @@
 // MediaPulse AI design tokens
-// Concept: "pulse" -- listening to the heartbeat of customer conversation.
-// Warm paper ground (legitimate for a Beirut bakery brand), electric indigo
-// as the tech/AI signal, coral as the one accent reserved for the pulse
-// motif and urgent moments.
+// Visual direction: a calm "AI operations" product with the polish of modern
+// builder tools. Deep ink surfaces create confidence, electric violet signals
+// intelligence, teal signals healthy customer sentiment, and coral is reserved
+// for urgent action.
 
 export const colors = {
-  background: "#FAF6F0", // warm paper
+  background: "#F5F6FA",
+  backgroundDeep: "#EEF0F7",
   surface: "#FFFFFF",
-  surfaceAlt: "#F3EEE6",
-  border: "#E9E1D6",
-  textPrimary: "#16121F", // ink
-  textSecondary: "#726B80",
+  surfaceAlt: "#F9FAFD",
+  surfaceMuted: "#F0F2F8",
+  border: "#E3E6EF",
+  borderStrong: "#D6DAE7",
 
-  primary: "#4B2FE0", // electric indigo
-  primaryDark: "#2E1B96",
-  primarySoft: "#EEE9FD",
+  ink: "#0E1222",
+  inkSoft: "#171C31",
+  textPrimary: "#111528",
+  textSecondary: "#697087",
+  textTertiary: "#969CB0",
+  textInverse: "#FFFFFF",
 
-  pulse: "#FF4D6D", // signature accent -- waveform, energy, urgency glow
+  primary: "#6B5CF6",
+  primaryDark: "#4C3DCC",
+  primarySoft: "#EEEBFF",
+  primaryFaint: "#F7F5FF",
 
-  positive: "#1FAE7A",
-  positiveBg: "#DFF5EA",
-  neutral: "#726B80",
-  neutralBg: "#EFECF5",
-  negative: "#E23F5C",
-  negativeBg: "#FCE4E9",
+  cyan: "#2CC9BC",
+  cyanSoft: "#E1F8F5",
+  pulse: "#FF6A5E",
+  pulseSoft: "#FFF0EE",
+  amber: "#F4A62A",
+  amberSoft: "#FFF5DF",
 
-  urgencyLow: "#1FAE7A",
-  urgencyLowBg: "#DFF5EA",
-  urgencyMedium: "#F5A524",
-  urgencyMediumBg: "#FDF0DA",
-  urgencyHigh: "#E23F5C",
-  urgencyHighBg: "#FCE4E9",
+  positive: "#178F70",
+  positiveBg: "#E1F5EE",
+  neutral: "#697087",
+  neutralBg: "#EFF1F6",
+  negative: "#D94A62",
+  negativeBg: "#FDE9ED",
 
-  danger: "#E23F5C",
+  urgencyLow: "#178F70",
+  urgencyLowBg: "#E1F5EE",
+  urgencyMedium: "#C98212",
+  urgencyMediumBg: "#FFF3D8",
+  urgencyHigh: "#D94A62",
+  urgencyHighBg: "#FDE9ED",
 
-  ink: "#16121F",
+  danger: "#D94A62",
+  dangerSoft: "#FDE9ED",
+  success: "#178F70",
+  successSoft: "#E1F5EE",
+  warning: "#C98212",
+  warningSoft: "#FFF3D8",
+
+  overlay: "rgba(14, 18, 34, 0.52)",
+  white10: "rgba(255,255,255,0.10)",
+  white16: "rgba(255,255,255,0.16)",
+  white72: "rgba(255,255,255,0.72)",
 };

@@ -1,10 +1,13 @@
 import {
   Business,
   Comment,
+  CommentStatus,
   Insight,
   PolicyDocument,
   ReplySource,
 } from "../types";
+
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
 
@@ -87,6 +90,19 @@ export function generateReply(commentId: string) {
     sources: ReplySource[];
     comment: Partial<Comment>;
   }>(`/comments/${commentId}/reply`, { method: "POST" });
+}
+
+export function updateCommentStatus(
+  commentId: string,
+  status: CommentStatus
+) {
+  return request<{
+    message: string;
+    comment: Comment;
+  }>(`/comments/${commentId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }
 
 // ---- Business knowledge (documents) ----

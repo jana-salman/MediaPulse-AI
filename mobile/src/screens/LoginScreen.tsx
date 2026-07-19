@@ -1,19 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AppButton } from "../components/AppButton";
+import { BrandMark } from "../components/BrandMark";
+import { Notice } from "../components/Notice";
 import { PulseWaveform } from "../components/PulseWaveform";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme/colors";
 import { fonts } from "../theme/fonts";
+import { radii, shadows } from "../theme/tokens";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -21,209 +27,243 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const submit = async () => {
-    setError(null);
-    if (!email || !password) {
-      setError("Enter an email and password.");
+    setMessage(null);
+    if (!email.trim() || !password) {
+      setMessage({ text: "Enter your email and password to continue.", type: "error" });
       return;
     }
+    if (password.length < 6) {
+      setMessage({ text: "Your password must contain at least 6 characters.", type: "error" });
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signin") {
         await signIn(email.trim(), password);
       } else {
         await signUp(email.trim(), password);
-        setError("Account created. Check your email if confirmation is required, then sign in.");
         setMode("signin");
+        setMessage({
+          text: "Account created. Confirm your email if requested, then sign in.",
+          type: "success",
+        });
       }
     } catch (err: any) {
-      setError(err.message ?? "Something went wrong.");
+      setMessage({ text: err.message ?? "We could not complete that request.", type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
+  const switchMode = () => {
+    setMessage(null);
+    setMode((current) => (current === "signin" ? "signup" : "signin"));
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.brandBlock}>
-        <View style={styles.logoMark}>
-          <Text style={styles.logoMarkText}>M</Text>
-        </View>
-        <Text style={styles.title}>MediaPulse AI</Text>
-        <PulseWaveform color={colors.pulse} width={140} height={24} />
-        <Text style={styles.subtitle}>
-          {mode === "signin" ? "Sign in to continue" : "Create an account"}
-        </Text>
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor={colors.textSecondary}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <View style={styles.passwordWrapper}>
-        <TextInput
-          style={styles.passwordInput}
-          placeholder="Password"
-          placeholderTextColor={colors.textSecondary}
-          secureTextEntry={!showPassword}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TouchableOpacity
-          style={styles.eyeButton}
-          onPress={() => setShowPassword((prev) => !prev)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    <View style={styles.root}>
+      <StatusBar style="light" />
+      <View style={styles.heroGlowOne} />
+      <View style={styles.heroGlowTwo} />
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+        <KeyboardAvoidingView
+          style={styles.keyboard}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <Ionicons
-            name={showPassword ? "eye-off-outline" : "eye-outline"}
-            size={20}
-            color={colors.textSecondary}
-          />
-        </TouchableOpacity>
-      </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.hero}>
+              <View style={styles.brandOnDark}>
+                <View style={styles.brandMarkWrap}>
+                  <BrandMark compact />
+                </View>
+                <Text style={styles.brandName}>MediaPulse AI</Text>
+              </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+              <Text style={styles.heroTitle}>Turn customer feedback into clear action.</Text>
+              <Text style={styles.heroSubtitle}>
+                Analyze sentiment, spot urgent issues and answer customers using your real business policies.
+              </Text>
 
-      <TouchableOpacity style={styles.button} onPress={submit} disabled={loading} activeOpacity={0.85}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>
-            {mode === "signin" ? "Sign In" : "Sign Up"}
-          </Text>
-        )}
-      </TouchableOpacity>
+              <View style={styles.heroSignal}>
+                <PulseWaveform color={colors.cyan} width={126} height={24} />
+                <Text style={styles.signalLabel}>LIVE CUSTOMER PULSE</Text>
+              </View>
+            </View>
 
-      <TouchableOpacity
-        onPress={() => {
-          setError(null);
-          setMode(mode === "signin" ? "signup" : "signin");
-        }}
-      >
-        <Text style={styles.switchText}>
-          {mode === "signin"
-            ? "No account? Sign up"
-            : "Already have an account? Sign in"}
-        </Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+            <View style={styles.authCard}>
+              <View style={styles.cardHeaderRow}>
+                <View>
+                  <Text style={styles.cardEyebrow}>{mode === "signin" ? "WELCOME BACK" : "GET STARTED"}</Text>
+                  <Text style={styles.cardTitle}>{mode === "signin" ? "Sign in" : "Create your account"}</Text>
+                </View>
+                <View style={styles.securePill}>
+                  <Ionicons name="shield-checkmark-outline" size={14} color={colors.success} />
+                  <Text style={styles.secureText}>Secure</Text>
+                </View>
+              </View>
+
+              <Text style={styles.fieldLabel}>Email address</Text>
+              <View style={styles.inputShell}>
+                <Ionicons name="mail-outline" size={19} color={colors.textTertiary} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="you@business.com"
+                  placeholderTextColor={colors.textTertiary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!loading}
+                />
+              </View>
+
+              <Text style={styles.fieldLabel}>Password</Text>
+              <View style={styles.inputShell}>
+                <Ionicons name="lock-closed-outline" size={19} color={colors.textTertiary} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="At least 6 characters"
+                  placeholderTextColor={colors.textTertiary}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!loading}
+                  onSubmitEditing={submit}
+                />
+                <Pressable onPress={() => setShowPassword((value) => !value)} hitSlop={10}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={colors.textSecondary}
+                  />
+                </Pressable>
+              </View>
+
+              {message ? (
+                <View style={{ marginBottom: 14 }}>
+                  <Notice message={message.text} type={message.type} />
+                </View>
+              ) : null}
+
+              <AppButton
+                label={mode === "signin" ? "Continue to workspace" : "Create account"}
+                icon={mode === "signin" ? "arrow-forward" : "person-add-outline"}
+                onPress={submit}
+                loading={loading}
+              />
+
+              <Pressable style={styles.switchMode} onPress={switchMode} disabled={loading}>
+                <Text style={styles.switchMuted}>
+                  {mode === "signin" ? "New to MediaPulse?" : "Already have an account?"}
+                </Text>
+                <Text style={styles.switchLink}>{mode === "signin" ? " Create account" : " Sign in"}</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 28,
-    backgroundColor: colors.background,
+  root: { flex: 1, backgroundColor: colors.ink, overflow: "hidden" },
+  safeArea: { flex: 1 },
+  keyboard: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 28 },
+  heroGlowOne: {
+    position: "absolute",
+    width: 290,
+    height: 290,
+    borderRadius: 145,
+    backgroundColor: "rgba(107,92,246,0.28)",
+    top: -120,
+    right: -110,
   },
-  brandBlock: { alignItems: "center", marginBottom: 36 },
-  logoMark: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 4,
+  heroGlowTwo: {
+    position: "absolute",
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    backgroundColor: "rgba(44,201,188,0.13)",
+    top: 120,
+    left: -150,
   },
-  logoMarkText: {
-    fontFamily: fonts.display,
-    fontSize: 26,
-    color: "#fff",
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 26,
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: colors.surface,
+  hero: { paddingTop: 20, paddingBottom: 28 },
+  brandOnDark: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 30 },
+  brandMarkWrap: {
+    backgroundColor: colors.white10,
+    padding: 4,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    marginBottom: 12,
+    borderColor: colors.white16,
   },
-  passwordWrapper: {
+  brandName: { fontFamily: fonts.display, fontSize: 17, color: colors.textInverse, letterSpacing: -0.3 },
+  heroTitle: {
+    fontFamily: fonts.display,
+    color: colors.textInverse,
+    fontSize: 34,
+    lineHeight: 39,
+    letterSpacing: -1.2,
+    maxWidth: 350,
+  },
+  heroSubtitle: {
+    fontFamily: fonts.body,
+    color: colors.white72,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 12,
+    maxWidth: 350,
+  },
+  heroSignal: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 22 },
+  signalLabel: { fontFamily: fonts.mono, color: colors.cyan, fontSize: 9, letterSpacing: 1.4 },
+  authCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xxl,
+    padding: 20,
+    marginTop: "auto",
+    ...shadows.floating,
+  },
+  cardHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 },
+  cardEyebrow: { fontFamily: fonts.bodySemiBold, color: colors.primary, fontSize: 10, letterSpacing: 1.3 },
+  cardTitle: { fontFamily: fonts.display, color: colors.textPrimary, fontSize: 25, letterSpacing: -0.7, marginTop: 4 },
+  securePill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    marginBottom: 12,
+    gap: 5,
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
   },
-  passwordInput: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  eyeButton: {
-    paddingHorizontal: 14,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 15,
+  secureText: { fontFamily: fonts.bodySemiBold, fontSize: 10.5, color: colors.success },
+  fieldLabel: { fontFamily: fonts.bodySemiBold, fontSize: 12, color: colors.textSecondary, marginBottom: 7 },
+  inputShell: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 3,
+    gap: 10,
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: 14,
+    marginBottom: 15,
   },
-  buttonText: {
-    color: "#fff",
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 15,
-  },
-  switchText: {
-    fontFamily: fonts.bodyMedium,
-    color: colors.primary,
-    textAlign: "center",
-    marginTop: 20,
-    fontSize: 13,
-  },
-  error: {
-    fontFamily: fonts.body,
-    color: colors.danger,
-    fontSize: 13,
-    marginBottom: 10,
-    textAlign: "center",
-  },
+  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, paddingVertical: 12 },
+  switchMode: { flexDirection: "row", justifyContent: "center", paddingTop: 18, paddingBottom: 2 },
+  switchMuted: { fontFamily: fonts.body, color: colors.textSecondary, fontSize: 12.5 },
+  switchLink: { fontFamily: fonts.bodySemiBold, color: colors.primary, fontSize: 12.5 },
 });
