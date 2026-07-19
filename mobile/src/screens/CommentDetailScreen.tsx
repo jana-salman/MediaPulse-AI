@@ -15,12 +15,20 @@ import { AppButton } from "../components/AppButton";
 import { Badge } from "../components/Badge";
 import { Notice } from "../components/Notice";
 import { SectionCard } from "../components/SectionCard";
-import { generateReply, getComment } from "../config/api";
+import {
+  generateReply,
+  getComment,
+  updateCommentStatus,
+} from "../config/api";
 import { MainStackParamList } from "../navigation/AppNavigator";
 import { colors } from "../theme/colors";
 import { fonts } from "../theme/fonts";
 import { radii, shadows } from "../theme/tokens";
-import { Comment, ReplySource } from "../types";
+import {
+  Comment,
+  CommentStatus,
+  ReplySource,
+} from "../types";
 
 type Props = NativeStackScreenProps<MainStackParamList, "CommentDetail">;
 
@@ -35,12 +43,61 @@ const urgencyPalette = {
   medium: { color: colors.urgencyMedium, background: colors.urgencyMediumBg },
   high: { color: colors.urgencyHigh, background: colors.urgencyHighBg },
 };
+const statusPalette: Record<
+  CommentStatus,
+  {
+    label: string;
+    description: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    color: string;
+    background: string;
+  }
+> = {
+  unanswered: {
+    label: "New",
+    description: "Generate a grounded reply to begin handling this comment.",
+    icon: "mail-unread-outline",
+    color: colors.primary,
+    background: colors.primarySoft,
+  },
+  reply_ready: {
+    label: "Reply ready",
+    description: "The reply is ready to be sent to the customer.",
+    icon: "checkmark-circle-outline",
+    color: colors.warning,
+    background: colors.warningSoft,
+  },
+  sent: {
+    label: "Reply sent",
+    description: "The customer has received a response.",
+    icon: "paper-plane-outline",
+    color: colors.cyan,
+    background: colors.cyanSoft,
+  },
+  resolved: {
+    label: "Resolved",
+    description: "This customer issue has been completed.",
+    icon: "shield-checkmark-outline",
+    color: colors.success,
+    background: colors.successSoft,
+  },
+};
+const workflowSteps: {
+  status: CommentStatus;
+  label: string;
+}[] = [
+  { status: "unanswered", label: "New" },
+  { status: "reply_ready", label: "Ready" },
+  { status: "sent", label: "Sent" },
+  { status: "resolved", label: "Resolved" },
+];
 
 export default function CommentDetailScreen({ route, navigation }: Props) {
   const { commentId } = route.params;
   const [comment, setComment] = useState<Comment | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [sources, setSources] = useState<ReplySource[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -69,6 +126,7 @@ export default function CommentDetailScreen({ route, navigation }: Props) {
               ...previous,
               suggested_reply: response.reply,
               reply_source: response.comment.reply_source ?? previous.reply_source,
+              status: response.comment.status ?? "reply_ready",
             }
           : previous
       );
@@ -79,6 +137,20 @@ export default function CommentDetailScreen({ route, navigation }: Props) {
       setGenerating(false);
     }
   };
+
+  const handleStatusUpdate = async (status: CommentStatus) => {
+  setUpdatingStatus(true);
+  setError(null);
+
+  try {
+    const response = await updateCommentStatus(commentId, status);
+    setComment(response.comment);
+  } catch (err: any) {
+    setError(err.message ?? "Could not update the comment status.");
+  } finally {
+    setUpdatingStatus(false);
+  }
+};
 
   const handleCopy = async () => {
     if (!comment) return;
@@ -113,7 +185,10 @@ export default function CommentDetailScreen({ route, navigation }: Props) {
       </SafeAreaView>
     );
   }
-
+  const workflowStatus = statusPalette[comment.status];
+  const workflowStepIndex = workflowSteps.findIndex(
+  (step) => step.status === comment.status
+);
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.topBar}>
@@ -161,6 +236,132 @@ export default function CommentDetailScreen({ route, navigation }: Props) {
             <Ionicons name="scan-outline" size={19} color={colors.cyan} />
           </View>
           <Text style={styles.summaryText}>{comment.summary}</Text>
+        </SectionCard>
+
+        <Text style={styles.sectionLabel}>WORKFLOW STATUS</Text>
+
+        <SectionCard style={styles.workflowCard}>
+          <View style={styles.workflowStatusRow}>
+            <View
+              style={[
+                styles.workflowStatusIcon,
+                { backgroundColor: workflowStatus.background },
+              ]}
+            >
+              <Ionicons
+                name={workflowStatus.icon}
+                size={21}
+                color={workflowStatus.color}
+              />
+            </View>
+
+            <View style={styles.workflowStatusCopy}>
+              <Text style={styles.workflowStatusEyebrow}>CURRENT STATUS</Text>
+
+              <Text
+                style={[
+                  styles.workflowStatusTitle,
+                  { color: workflowStatus.color },
+                ]}
+              >
+                {workflowStatus.label}
+              </Text>
+
+              <Text style={styles.workflowStatusDescription}>
+                {workflowStatus.description}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.workflowSteps}>
+            {workflowSteps.map((step, index) => {
+              const completed = index < workflowStepIndex;
+              const active = index === workflowStepIndex;
+
+              return (
+                <React.Fragment key={step.status}>
+                  <View style={styles.workflowStep}>
+                    <View
+                      style={[
+                        styles.workflowDot,
+                        (completed || active) && styles.workflowDotActive,
+                        active && {
+                          backgroundColor: workflowStatus.color,
+                          borderColor: workflowStatus.color,
+                        },
+                      ]}
+                    >
+                      {completed ? (
+                        <Ionicons
+                          name="checkmark"
+                          size={13}
+                          color={colors.textInverse}
+                        />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.workflowDotText,
+                            active && styles.workflowDotTextActive,
+                          ]}
+                        >
+                          {index + 1}
+                        </Text>
+                      )}
+                    </View>
+
+                    <Text
+                      style={[
+                        styles.workflowStepLabel,
+                        active && styles.workflowStepLabelActive,
+                      ]}
+                    >
+                      {step.label}
+                    </Text>
+                  </View>
+
+                  {index < workflowSteps.length - 1 ? (
+                    <View
+                      style={[
+                        styles.workflowLine,
+                        completed && styles.workflowLineComplete,
+                      ]}
+                    />
+                  ) : null}
+                </React.Fragment>
+              );
+            })}
+          </View>
+
+          {comment.status === "reply_ready" ? (
+            <AppButton
+              label="Mark reply as sent"
+              icon="paper-plane-outline"
+              onPress={() => handleStatusUpdate("sent")}
+              loading={updatingStatus}
+              style={styles.workflowAction}
+            />
+          ) : null}
+
+          {comment.status === "sent" ? (
+            <AppButton
+              label="Mark issue as resolved"
+              icon="shield-checkmark-outline"
+              onPress={() => handleStatusUpdate("resolved")}
+              loading={updatingStatus}
+              style={styles.workflowAction}
+            />
+          ) : null}
+
+          {comment.status === "resolved" ? (
+            <AppButton
+              label="Reopen issue"
+              icon="refresh-outline"
+              onPress={() => handleStatusUpdate("sent")}
+              loading={updatingStatus}
+              variant="secondary"
+              style={styles.workflowAction}
+            />
+          ) : null}
         </SectionCard>
 
         <View style={styles.replyHeaderRow}>
@@ -281,4 +482,112 @@ const styles = StyleSheet.create({
   sourceSimilarity: { fontFamily: fonts.body, fontSize: 9.5, color: colors.success, marginTop: 2 },
   sourceContent: { fontFamily: fonts.body, fontSize: 11.5, lineHeight: 17, color: colors.textSecondary, marginTop: 10 },
   actions: { marginTop: 23 },
+    workflowCard: {
+    padding: 16,
+  },
+
+  workflowStatusRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+
+  workflowStatusIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  workflowStatusCopy: {
+    flex: 1,
+  },
+
+  workflowStatusEyebrow: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: colors.textTertiary,
+  },
+
+  workflowStatusTitle: {
+    fontFamily: fonts.displayMedium,
+    fontSize: 16,
+    marginTop: 3,
+  },
+
+  workflowStatusDescription: {
+    fontFamily: fonts.body,
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+
+  workflowSteps: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 20,
+  },
+
+  workflowStep: {
+    width: 54,
+    alignItems: "center",
+  },
+
+  workflowDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  workflowDotActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
+  workflowDotText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 10,
+    color: colors.textTertiary,
+  },
+
+  workflowDotTextActive: {
+    color: colors.textInverse,
+  },
+
+  workflowStepLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 8.5,
+    color: colors.textTertiary,
+    marginTop: 6,
+    textAlign: "center",
+  },
+
+  workflowStepLabelActive: {
+    color: colors.textPrimary,
+    fontFamily: fonts.bodySemiBold,
+  },
+
+  workflowLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: colors.border,
+    marginTop: 13,
+    marginHorizontal: -4,
+  },
+
+  workflowLineComplete: {
+    backgroundColor: colors.success,
+  },
+
+  workflowAction: {
+    marginTop: 18,
+  },
 });

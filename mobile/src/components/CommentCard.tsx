@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
 import { fonts } from "../theme/fonts";
 import { radii, shadows } from "../theme/tokens";
-import { Comment } from "../types";
+import { Comment, CommentStatus } from "../types";
 import { Badge } from "./Badge";
 
 const sentimentColors: Record<string, { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
@@ -17,6 +17,35 @@ const urgencyColors: Record<string, { color: string; bg: string }> = {
   low: { color: colors.urgencyLow, bg: colors.urgencyLowBg },
   medium: { color: colors.urgencyMedium, bg: colors.urgencyMediumBg },
   high: { color: colors.urgencyHigh, bg: colors.urgencyHighBg },
+};
+const statusColors: Record<
+  CommentStatus,
+  {
+    label: string;
+    color: string;
+    background: string;
+  }
+> = {
+  unanswered: {
+    label: "New",
+    color: colors.primary,
+    background: colors.primarySoft,
+  },
+  reply_ready: {
+    label: "Reply ready",
+    color: colors.warning,
+    background: colors.warningSoft,
+  },
+  sent: {
+    label: "Sent",
+    color: colors.cyan,
+    background: colors.cyanSoft,
+  },
+  resolved: {
+    label: "Resolved",
+    color: colors.success,
+    background: colors.successSoft,
+  },
 };
 
 function formatDate(value: string) {
@@ -32,6 +61,7 @@ function formatDate(value: string) {
 export function CommentCard({ comment, onPress }: { comment: Comment; onPress: () => void }) {
   const sentiment = sentimentColors[comment.sentiment] ?? sentimentColors.neutral;
   const urgency = urgencyColors[comment.urgency] ?? urgencyColors.low;
+  const status = statusColors[comment.status] ?? statusColors.unanswered;
 
   return (
     <Pressable
@@ -67,8 +97,17 @@ export function CommentCard({ comment, onPress }: { comment: Comment; onPress: (
           </Text>
         </View>
         <View style={styles.openAction}>
-          <Text style={styles.openText}>Open</Text>
-          <Ionicons name="arrow-forward" size={15} color={colors.primary} />
+          <Badge
+            label={status.label}
+            color={status.color}
+            backgroundColor={status.background}
+          />
+
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={colors.textTertiary}
+          />
         </View>
       </View>
     </Pressable>

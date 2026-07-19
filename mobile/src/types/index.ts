@@ -1,5 +1,11 @@
 export type Sentiment = "positive" | "neutral" | "negative";
+
 export type Urgency = "low" | "medium" | "high";
+export type CommentStatus =
+  | "unanswered"
+  | "reply_ready"
+  | "sent"
+  | "resolved";
 export type Category =
   | "delivery"
   | "product_quality"
@@ -28,7 +34,7 @@ export interface Comment {
   summary: string;
   suggested_reply: string;
   reply_source: string | null;
-  status: string;
+  status: CommentStatus;
   created_at: string;
 }
 

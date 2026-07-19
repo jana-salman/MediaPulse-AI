@@ -128,14 +128,18 @@ export default function DashboardScreen() {
     const neutral = comments.filter((comment) => comment.sentiment === "neutral").length;
     const negative = comments.filter((comment) => comment.sentiment === "negative").length;
     const highUrgency = comments.filter((comment) => comment.urgency === "high").length;
-    const unanswered = comments.filter((comment) => comment.status === "unanswered").length;
+    const needsResponse = comments.filter(
+      (comment) =>
+        comment.status === "unanswered" ||
+        comment.status === "reply_ready"
+    ).length;
     const total = comments.length;
     return {
       positive,
       neutral,
       negative,
       highUrgency,
-      unanswered,
+      needsResponse,
       total,
       positiveRate: total ? Math.round((positive / total) * 100) : 0,
       negativeRate: total ? Math.round((negative / total) * 100) : 0,
@@ -195,7 +199,13 @@ export default function DashboardScreen() {
           <MetricCard label="Positive" value={metrics.positive} icon="happy-outline" color={colors.positive} background={colors.positiveBg} />
           <MetricCard label="Negative" value={metrics.negative} icon="sad-outline" color={colors.negative} background={colors.negativeBg} />
           <MetricCard label="High urgency" value={metrics.highUrgency} icon="flash-outline" color={colors.urgencyHigh} background={colors.urgencyHighBg} />
-          <MetricCard label="Unanswered" value={metrics.unanswered} icon="chatbubble-outline" color={colors.primary} background={colors.primarySoft} />
+          <MetricCard
+  label="Needs response"
+  value={metrics.needsResponse}
+  icon="chatbubble-ellipses-outline"
+  color={colors.primary}
+  background={colors.primarySoft}
+/>
         </View>
 
         <SectionCard style={styles.sentimentCard}>
