@@ -3,7 +3,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
 import { fonts } from "../theme/fonts";
-import { radii } from "../theme/tokens";
+import { radii, shadows } from "../theme/tokens";
 
 export function PageHeader({
   eyebrow,
@@ -26,8 +26,17 @@ export function PageHeader({
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       {icon ? (
-        <Pressable onPress={onIconPress} style={styles.iconButton} hitSlop={10}>
-          <Ionicons name={icon} size={21} color={colors.textPrimary} />
+        <Pressable
+          accessibilityRole={onIconPress ? "button" : undefined}
+          onPress={onIconPress}
+          disabled={!onIconPress}
+          style={({ pressed }) => [
+            styles.iconButton,
+            pressed && onIconPress && styles.iconPressed,
+          ]}
+          hitSlop={10}
+        >
+          <Ionicons name={icon} size={20} color={colors.textPrimary} />
         </Pressable>
       ) : null}
     </View>
@@ -35,38 +44,46 @@ export function PageHeader({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 16 },
-  copy: { flex: 1 },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 18,
+  },
+  copy: { flex: 1, maxWidth: 620 },
   eyebrow: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 11,
+    fontSize: 10.5,
     color: colors.primary,
     textTransform: "uppercase",
-    letterSpacing: 1.4,
-    marginBottom: 6,
+    letterSpacing: 1.45,
+    marginBottom: 7,
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 28,
+    fontSize: 29,
     color: colors.textPrimary,
-    letterSpacing: -0.9,
-    lineHeight: 34,
+    letterSpacing: -0.95,
+    lineHeight: 35,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textSecondary,
-    lineHeight: 19,
-    marginTop: 6,
+    lineHeight: 20,
+    marginTop: 7,
+    maxWidth: 560,
   },
   iconButton: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: radii.md,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.soft,
   },
+  iconPressed: { opacity: 0.75, transform: [{ scale: 0.97 }] },
 });

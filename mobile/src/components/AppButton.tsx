@@ -36,6 +36,7 @@ export function AppButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       disabled={blocked}
       style={({ pressed }) => [
@@ -51,8 +52,12 @@ export function AppButton({
         <ActivityIndicator color={palette.text.color} />
       ) : (
         <>
-          {icon ? <Ionicons name={icon} size={18} color={palette.text.color} /> : null}
-          <Text style={[styles.label, palette.text]}>{label}</Text>
+          {icon ? (
+            <Ionicons name={icon} size={18} color={palette.text.color} />
+          ) : null}
+          <Text style={[styles.label, palette.text]} numberOfLines={1}>
+            {label}
+          </Text>
         </>
       )}
     </Pressable>
@@ -84,17 +89,21 @@ const variants = {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 52,
+    minHeight: 54,
     borderRadius: radii.md,
     borderWidth: 1,
-    paddingHorizontal: 18,
+    paddingHorizontal: 19,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: 9,
   },
   primaryShadow: { ...shadows.card, shadowColor: colors.primary },
-  label: { fontFamily: fonts.bodySemiBold, fontSize: 14 },
-  disabled: { opacity: 0.48, shadowOpacity: 0 },
+  label: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13.5,
+    letterSpacing: 0.05,
+  },
+  disabled: { opacity: 0.48, shadowOpacity: 0, elevation: 0 },
   pressed: { transform: [{ scale: 0.985 }], opacity: 0.92 },
 });

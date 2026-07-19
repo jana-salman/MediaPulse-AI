@@ -182,7 +182,14 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink, overflow: "hidden" },
   safeArea: { flex: 1 },
   keyboard: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 28 },
+  scrollContent: {
+    flexGrow: 1,
+    width: "100%",
+    maxWidth: 620,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+  },
   heroGlowOne: {
     position: "absolute",
     width: 290,
@@ -201,7 +208,7 @@ const styles = StyleSheet.create({
     top: 120,
     left: -150,
   },
-  hero: { paddingTop: 20, paddingBottom: 28 },
+  hero: { paddingTop: 22, paddingBottom: 30 },
   brandOnDark: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 30 },
   brandMarkWrap: {
     backgroundColor: colors.white10,
@@ -232,7 +239,9 @@ const styles = StyleSheet.create({
   authCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.xxl,
-    padding: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.white16,
     marginTop: "auto",
     ...shadows.floating,
   },

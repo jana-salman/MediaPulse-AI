@@ -257,10 +257,16 @@ export default function AddCommentScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: 16, paddingTop: 14 },
+  content: {
+    width: "100%",
+    maxWidth: 820,
+    alignSelf: "center",
+    paddingHorizontal: 18,
+    paddingTop: 16,
+  },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
   muted: { fontFamily: fonts.body, color: colors.textSecondary },
-  composerCard: { marginTop: 20, padding: 16 },
+  composerCard: { marginTop: 20, padding: 18 },
   composerTopRow: { flexDirection: "row", alignItems: "center", gap: 11, marginBottom: 14 },
   composerIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.primarySoft },
   composerTitle: { fontFamily: fonts.displayMedium, fontSize: 15, color: colors.textPrimary },
@@ -269,7 +275,7 @@ const styles = StyleSheet.create({
   aiDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.cyan },
   aiText: { fontFamily: fonts.bodySemiBold, fontSize: 10, color: colors.success },
   textarea: {
-    minHeight: 160,
+    minHeight: 168,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.borderStrong,

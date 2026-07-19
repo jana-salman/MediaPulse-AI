@@ -12,7 +12,11 @@ export function SectionCard({
   style?: ViewStyle;
   elevated?: boolean;
 }) {
-  return <View style={[styles.card, elevated && shadows.soft, style]}>{children}</View>;
+  return (
+    <View style={[styles.card, elevated && shadows.soft, style]}>
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -20,7 +24,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.lg,
-    padding: 16,
+    borderRadius: radii.xl,
+    padding: 17,
   },
 });

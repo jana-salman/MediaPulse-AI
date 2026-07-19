@@ -19,7 +19,7 @@ export function Notice({
   }[type];
 
   return (
-    <View style={[styles.notice, { backgroundColor: palette.bg }]}> 
+    <View style={[styles.notice, { backgroundColor: palette.bg, borderColor: `${palette.fg}22` }]}>
       <Ionicons name={palette.icon} size={18} color={palette.fg} />
       <Text style={[styles.text, { color: palette.fg }]}>{message}</Text>
     </View>
@@ -32,7 +32,8 @@ const styles = StyleSheet.create({
     gap: 9,
     alignItems: "flex-start",
     borderRadius: radii.md,
-    padding: 12,
+    padding: 13,
+    borderWidth: 1,
   },
-  text: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 12.5, lineHeight: 18 },
+  text: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 12.25, lineHeight: 18 },
 });
