@@ -235,7 +235,14 @@ export default function BusinessSetupScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 36 },
+  content: {
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 34 },
   signOutTop: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingLeft: 10 },
   signOutTopText: { fontFamily: fonts.bodySemiBold, fontSize: 12, color: colors.textSecondary },
@@ -254,7 +261,7 @@ const styles = StyleSheet.create({
   segmentActive: { backgroundColor: colors.ink },
   segmentText: { fontFamily: fonts.bodySemiBold, fontSize: 12.5, color: colors.textSecondary },
   segmentTextActive: { color: colors.textInverse },
-  formCard: { padding: 18 },
+  formCard: { padding: 20 },
   cardHeadingRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 22 },
   cardIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   cardTitle: { fontFamily: fonts.displayMedium, fontSize: 16, color: colors.textPrimary },

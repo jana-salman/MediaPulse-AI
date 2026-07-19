@@ -159,14 +159,20 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: 16, paddingTop: 14 },
+  content: {
+    width: "100%",
+    maxWidth: 820,
+    alignSelf: "center",
+    paddingHorizontal: 18,
+    paddingTop: 16,
+  },
   profileHero: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
     backgroundColor: colors.ink,
     borderRadius: radii.xxl,
-    padding: 18,
+    padding: 20,
     marginTop: 20,
     overflow: "hidden",
     ...shadows.card,

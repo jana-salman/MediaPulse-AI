@@ -256,7 +256,13 @@ export default function BusinessKnowledgeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: 16, paddingTop: 14 },
+  content: {
+    width: "100%",
+    maxWidth: 820,
+    alignSelf: "center",
+    paddingHorizontal: 18,
+    paddingTop: 16,
+  },
   trustBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -277,7 +283,7 @@ const styles = StyleSheet.create({
   templateChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   templateText: { fontFamily: fonts.bodySemiBold, fontSize: 11.5, color: colors.textSecondary },
   templateTextActive: { color: colors.textInverse },
-  editorCard: { marginTop: 14, padding: 16 },
+  editorCard: { marginTop: 14, padding: 18 },
   editorHeading: { flexDirection: "row", alignItems: "center", gap: 11, marginBottom: 18 },
   editorIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   editorTitle: { fontFamily: fonts.displayMedium, fontSize: 15, color: colors.textPrimary },
@@ -292,7 +298,7 @@ const styles = StyleSheet.create({
   indexedPill: { flexDirection: "row", alignItems: "center", gap: 5 },
   indexedDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.cyan },
   indexedText: { fontFamily: fonts.bodyMedium, fontSize: 10.5, color: colors.textTertiary },
-  documentCard: { padding: 14 },
+  documentCard: { padding: 16 },
   documentTopRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   documentIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   documentTitle: { fontFamily: fonts.bodySemiBold, fontSize: 13.5, color: colors.textPrimary },

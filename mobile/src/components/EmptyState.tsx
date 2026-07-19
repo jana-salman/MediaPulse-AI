@@ -18,13 +18,13 @@ export function EmptyState({
   compact?: boolean;
 }) {
   return (
-    <View style={[styles.container, compact && styles.compact]}> 
+    <View style={[styles.container, compact && styles.compact]}>
       <View style={styles.visual}>
         <View style={styles.iconCircle}>
           <Ionicons name={icon} size={24} color={colors.primary} />
         </View>
         <View style={styles.wave}>
-          <PulseWaveform color={colors.primary} width={76} height={17} />
+          <PulseWaveform color={colors.primary} width={78} height={17} />
         </View>
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -37,42 +37,39 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 42,
+    paddingHorizontal: 30,
+    paddingVertical: 44,
     borderRadius: radii.xl,
     backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  compact: { paddingVertical: 28 },
-  visual: { height: 64, justifyContent: "center", alignItems: "center", marginBottom: 14 },
+  compact: { paddingVertical: 30 },
+  visual: { height: 66, justifyContent: "center", alignItems: "center", marginBottom: 15 },
   iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
+    width: 56,
+    height: 56,
+    borderRadius: 19,
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(103,87,232,0.12)",
   },
-  wave: {
-    position: "absolute",
-    bottom: -2,
-    right: -46,
-    opacity: 0.32,
-  },
+  wave: { position: "absolute", bottom: -2, right: -47, opacity: 0.28 },
   title: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 15,
+    fontFamily: fonts.displayMedium,
+    fontSize: 15.5,
     color: colors.textPrimary,
     textAlign: "center",
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12.5,
-    lineHeight: 18,
+    lineHeight: 19,
     color: colors.textSecondary,
     textAlign: "center",
-    marginTop: 5,
-    maxWidth: 260,
+    marginTop: 6,
+    maxWidth: 280,
   },
 });

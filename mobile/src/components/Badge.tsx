@@ -15,9 +15,11 @@ export function Badge({
   dot?: boolean;
 }) {
   return (
-    <View style={[styles.badge, { backgroundColor }]}> 
+    <View style={[styles.badge, { backgroundColor }]}>
       {dot ? <View style={[styles.dot, { backgroundColor: color }]} /> : null}
-      <Text style={[styles.text, { color }]}>{label}</Text>
+      <Text style={[styles.text, { color }]} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -34,8 +36,8 @@ const styles = StyleSheet.create({
   dot: { width: 5, height: 5, borderRadius: 3, marginRight: 5 },
   text: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 10.5,
+    fontSize: 10,
     textTransform: "capitalize",
-    letterSpacing: 0.1,
+    letterSpacing: 0.12,
   },
 });
